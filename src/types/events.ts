@@ -57,6 +57,7 @@ export type PingEvent = BaseInboundEvent & {
 
 export type ConversationInitOutboundEvent = {
   type: 'conversation_initiation_client_data';
+  dynamic_variables?: Record<string, string>;
 };
 
 export type PongOutboundEvent = {

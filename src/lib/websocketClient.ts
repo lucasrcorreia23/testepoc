@@ -11,6 +11,10 @@ type ConnectHandlers = {
   onError?: (message: string) => void;
 };
 
+type ConversationInitOptions = {
+  dynamicVariables?: Record<string, string>;
+};
+
 const parseEvent = (raw: string): ElevenLabsInboundEvent | null => {
   try {
     return JSON.parse(raw) as ElevenLabsInboundEvent;
@@ -77,11 +81,19 @@ export class ElevenLabsWsClient {
     this.ws.send(JSON.stringify(payload));
   }
 
-  sendConversationInit() {
+  sendConversationInit(options?: ConversationInitOptions): ConversationInitOutboundEvent {
+    const hasDynamicVariables = Boolean(
+      options?.dynamicVariables && Object.keys(options.dynamicVariables).length > 0,
+    );
+
     const payload: ConversationInitOutboundEvent = {
       type: 'conversation_initiation_client_data',
+      ...(hasDynamicVariables
+        ? { dynamic_variables: options?.dynamicVariables }
+        : {}),
     };
     this.sendJson(payload);
+    return payload;
   }
 
   sendPong(eventId: number) {

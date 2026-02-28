@@ -7,6 +7,7 @@ type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
 const DEFAULT_WS_URL =
   'wss://api.elevenlabs.io/v1/convai/conversation?agent_id=YOUR_AGENT_ID_OR_TOKEN';
+const DEFAULT_REF_TOKEN = 'REF_TOKEN_AQUI';
 
 function App() {
   const [wsUrl, setWsUrl] = useState(DEFAULT_WS_URL);
@@ -45,6 +46,15 @@ function App() {
     } catch {
       return 'URL WebSocket inválida.';
     }
+  };
+
+  const buildDynamicVariables = (value: string): Record<string, string> => {
+    const parsed = new URL(value.trim());
+    const refTokenFromUrl = parsed.searchParams.get('ref_token')?.trim();
+
+    return {
+      ref_token: refTokenFromUrl || DEFAULT_REF_TOKEN,
+    };
   };
 
   const stopConversation = async () => {
@@ -119,8 +129,11 @@ function App() {
         onOpen: async () => {
           setStatus('connected');
           pushLog('WebSocket conectado.');
-          client.sendConversationInit();
-          pushLog('Evento de iniciação enviado.');
+          const dynamicVariables = buildDynamicVariables(wsUrl);
+          const initPayload = client.sendConversationInit({
+            dynamicVariables,
+          });
+          pushLog(`Evento de iniciação enviado: ${JSON.stringify(initPayload)}`);
 
           await mic.start((base64Chunk) => {
             client.sendAudioChunk(base64Chunk);
